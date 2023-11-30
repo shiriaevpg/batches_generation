@@ -13,7 +13,8 @@ struct Point {
   Point(const std::string& str_latitude, const std::string& str_longitude);
 };
 
-struct Order {
+class Order {
+ public:
   Point destination;
   Point source;
   std::string claim;
@@ -21,6 +22,7 @@ struct Order {
 
   Order(const std::string& dest_lat, const std::string& dest_lon, const std::string& src_lat,
         const std::string& src_lon, std::string&& claim, std::string&& trace);
+  long double GetLength() const;
 };
 
 class Parser {
@@ -41,6 +43,11 @@ class Parser {
   explicit Parser(const char* filepath, size_t count_rows = kDefaultCountRows);
   [[nodiscard]] const std::vector<Order>& Get() const;
 };
+
+long double Order::GetLength() const {
+  static const long double kOneLatitude = 111.11;
+  // здесь должна быть формула отсюда https://stackoverflow.com/questions/27928/calculate-distance-between-two-latitude-longitude-points-haversine-formula
+}
 
 const std::vector<Order>& Parser::Get() const {
   return orders_;
