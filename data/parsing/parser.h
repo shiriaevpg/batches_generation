@@ -1,10 +1,15 @@
+#include <cmath>
 #include <fstream>
 #include <ios>
+#include <iostream>
+#include <numbers>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <iostream>
+
+const long long kEarthRadius = 6371;
+const long double kConvCoefficient = std::numbers::pi / 180;
 
 struct Point {
   long double latitude;
@@ -20,8 +25,9 @@ class Order {
   std::string claim;
   std::string trace;
 
-  Order(const std::string& dest_lat, const std::string& dest_lon, const std::string& src_lat,
-        const std::string& src_lon, std::string&& claim, std::string&& trace);
+  Order(const std::string& dest_lat, const std::string& dest_lon,
+        const std::string& src_lat, const std::string& src_lon,
+        std::string&& claim, std::string&& trace);
   long double GetLength() const;
 };
 
@@ -46,22 +52,29 @@ class Parser {
 
 long double Order::GetLength() const {
   static const long double kOneLatitude = 111.11;
-  // здесь должна быть формула отсюда https://stackoverflow.com/questions/27928/calculate-distance-between-two-latitude-longitude-points-haversine-formula
+
+  //формула отсюда:
+  // https://stackoverflow.com/questions/27928/calculate-distance-between-two-latitude-longitude-points-haversine-formula
+  long double latDelta = destination.latitude - source.latitude;
+  long double lonDelta = destination.longitude - source.longitude;
+  latDelta *= kConvCoefficient;
+  lonDelta *= kConvCoefficient;
+  long double angle = std::pow(std::sin(latDelta / 2), 2) +
+                      std::pow(std::sin(lonDelta / 2), 2) +
+                      std::cos(source.latitude * kConvCoefficient) *
+                          std::cos(destination.latitude * kConvCoefficient);
+  return angle * kEarthRadius;
 }
 
-const std::vector<Order>& Parser::Get() const {
-  return orders_;
-}
+const std::vector<Order>& Parser::Get() const { return orders_; }
 
 Point::Point(const std::string& str_latitude, const std::string& str_longitude)
-    : latitude(std::stold(str_latitude)), longitude(std::stold(str_longitude)) {}
+    : latitude(std::stold(str_latitude)),
+      longitude(std::stold(str_longitude)) {}
 
-Order::Order(const std::string& dest_lat,
-             const std::string& dest_lon,
-             const std::string& src_lat,
-             const std::string& src_lon,
-             std::string&& claim,
-             std::string&& trace)
+Order::Order(const std::string& dest_lat, const std::string& dest_lon,
+             const std::string& src_lat, const std::string& src_lon,
+             std::string&& claim, std::string&& trace)
     : destination(dest_lat, dest_lon),
       source(src_lat, src_lon),
       claim(std::move(claim)),
@@ -80,13 +93,16 @@ Parser::Parser(const char* filepath, size_t count_rows) {
     for (size_t j = 0; j < kColumnsCount; ++j) {
       getline(str, cells[j], kDelimiter);
     }
-    orders_.emplace_back(cells[kDestLatNumber], cells[kDestLonNumber], cells[kSrcLatNumber], cells[kSrcLonNumber],
-                         std::move(cells[kClaimIdNumber]), std::move(cells[kTraceIdNumber]));
+    orders_.emplace_back(cells[kDestLatNumber], cells[kDestLonNumber],
+                         cells[kSrcLatNumber], cells[kSrcLonNumber],
+                         std::move(cells[kClaimIdNumber]),
+                         std::move(cells[kTraceIdNumber]));
   }
   fin.close();
 }
 
-std::vector<std::vector<size_t>> SeparateOnTrace(const std::vector<Order>& orders) {
+std::vector<std::vector<size_t>> SeparateOnTrace(
+    const std::vector<Order>& orders) {
   std::unordered_map<std::string, std::vector<size_t>> traces;
   for (size_t i = 0; i < orders.size(); ++i) {
     traces[orders[i].trace].push_back(i);
