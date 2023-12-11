@@ -1,3 +1,0 @@
-/home/ruslan/Projects/batches_generation/simulated_annealing/cmake-build-debug/CMakeFiles/proba.dir
-/home/ruslan/Projects/batches_generation/simulated_annealing/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/ruslan/Projects/batches_generation/simulated_annealing/cmake-build-debug/CMakeFiles/rebuild_cache.dir
