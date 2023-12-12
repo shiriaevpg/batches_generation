@@ -1,6 +1,7 @@
 #pragma once
+#include "../utility/utility.h"
+
 #include <random>
-#include "../utility.h"
 
 struct DefaultScheduler {
   constexpr static long double kDefaultSchedulingStep = 0.99;
@@ -17,7 +18,7 @@ class SimAnnealing {
   const std::vector<Order>& orders_;
   Scheduler scheduler_;  // изменяет температуру
 
-  static const size_t kDefaultIterCount = 1000;
+  static const size_t kDefaultIterCount = 10000;
   constexpr static long double kDefaultTemperature = 1;
 
  public:

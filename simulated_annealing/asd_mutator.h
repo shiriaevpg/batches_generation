@@ -6,7 +6,7 @@
 // Все делается на mapах или setax, поэтому мутация работает за O(log n)
 
 #pragma once
-#include "../utility.h"
+#include "../utility/utility.h"
 
 #include <set>
 #include <map>
@@ -23,8 +23,8 @@ class Mutator {
   };
   struct Mutation {
     MutationType mutation_type;
-    size_t number1;
-    size_t number2;
+    size_t number1{};
+    size_t number2{};
 
     Mutation(MutationType mutation_type, const std::pair<size_t, size_t>& swap_poses);  // в случае, если swap
     Mutation(MutationType mutation_type, size_t pos);  // в случае, если добавлять или удалять
@@ -62,7 +62,7 @@ class Mutator {
   [[nodiscard]] double GetSwapDestProb() const { return used_.size() > 1 ? kSwapDestProb : 0; }
 
   void Remove(size_t id);
-  static void Swap(std::map<size_t, size_t>& id_to_pos, std::map<size_t, size_t>& pos_to_id, size_t id1, size_t id2);
+  static void Swap(std::map<size_t, size_t>& id_to_pos, std::map<size_t, size_t>& pos_to_id, size_t pos1, size_t pos2);
 
   [[nodiscard]] const Point& GetNextSrc(std::map<size_t, size_t>::iterator it) const;
   // возвращает следующую точку в порядке обхода в батче (может вернуть первую точку из dest)
@@ -81,6 +81,7 @@ class Mutator {
 
   static long double GetSwapDiff(const Point& prev1, const Point& point1, const Point& next1,
                                  const Point& prev2, const Point& point2, const Point& next2);
+  static long double GetSwapNearDiff(const Point& prev, const Point& point1, const Point& point2, const Point& next);
 };
 
 Mutator::Mutation::Mutation(Mutator::MutationType mutation_type, size_t pos)
@@ -134,10 +135,10 @@ void Mutator::Add(size_t id) {
 
 void Mutator::Swap(
     std::map<size_t, size_t>& id_to_pos, std::map<size_t, size_t>& pos_to_id,
-    size_t id1, size_t id2) {
-  std::swap(id_to_pos[id1], id_to_pos[id2]);
-  pos_to_id[id_to_pos[id1]] = id1;
-  pos_to_id[id_to_pos[id2]] = id2;
+    size_t pos1, size_t pos2) {
+  std::swap(pos_to_id[pos1], pos_to_id[pos2]);
+  id_to_pos[pos_to_id[pos1]] = pos1;
+  id_to_pos[pos_to_id[pos2]] = pos2;
 }
 
 void Mutator::Change(const Mutator::Mutation& mutation) {
@@ -264,22 +265,23 @@ long double Mutator::GetSwapDestDiff(size_t pos1, size_t pos2) {
 long double Mutator::GetSwapDiff(
     const Point& prev1, const Point& point1, const Point& next1,
     const Point& prev2, const Point& point2, const Point& next2) {
-  auto x1 = GetLength(prev1, point1);
-  auto x2 = GetLength(point1, next1);
-  auto x3 = GetLength(prev2, point2);
-  auto x4 = GetLength(point2, next2);
-  auto x5 = GetLength(prev1, point2);
-  auto x6 = GetLength(point2, next1);
-  auto x7 = GetLength(prev2, point1);
-  auto x8 = GetLength(point1, next2);
+  if (prev2 == point1) {  // в случае, если 2 точки рядом, работает другая формула
+    return GetSwapNearDiff(prev1, point1, point2, next2);
+  }
+  if (prev1 == point2) {
+    return GetSwapNearDiff(prev2, point2, point1, next1);
+  }
   return GetLength(prev1, point1) + GetLength(point1, next1) +
          GetLength(prev2, point2) + GetLength(point2, next2) -
          (GetLength(prev1, point2) + GetLength(point2, next1) +
          GetLength(prev2, point1) + GetLength(point1, next2));
 }
 
+long double Mutator::GetSwapNearDiff(const Point& prev, const Point& point1, const Point& point2, const Point& next) {
+  return GetLength(prev, point1) + GetLength(point2, next) -
+         (GetLength(prev, point2) + GetLength(point1, next));
+}
+
 long double Mutator::GetProb(const Mutator::Mutation& mutation, long double temp) {
-  auto diff = GetDiff(mutation);
-  std::cout << static_cast<size_t>(mutation.mutation_type) << ' ' << mutation.number1 << ' ' << mutation.number2 << ' ' << diff << std::endl;
   return std::min(std::exp(GetDiff(mutation) / temp), static_cast<long double>(1));
 }

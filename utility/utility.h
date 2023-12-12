@@ -1,18 +1,19 @@
 // тут всякая шняга, которая может пригодится везде
 
 #pragma once
-#include "data/parser.h"
+#include "../data/parser.h"
 
 #include <cmath>
 #include <map>
 #include <numbers>
+#include <random>
 #include <set>
 
 using BatchT = std::pair<std::vector<size_t>, std::vector<size_t>>;
 
 // используем метрику sum(dest - src) - sum(в порядке обхода в батче) + len_approach(n - 1),
 // так как в каждом отдельном заказе еще есть подлет
-const long double kLengthApproach = 0.1; // длина подлёта в километрах
+const long double kLengthApproach = 0.5; // длина подлёта в километрах
 
 std::random_device rd;
 std::mt19937 gen(rd());
