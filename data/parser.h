@@ -34,8 +34,7 @@ Parser::Parser(const char* filepath, size_t count_rows) {
   std::string line;
   std::getline(fin, line);
   std::vector<std::string> cells(kColumnsCount);
-  for (size_t i = 0; i < count_rows; ++i) {
-    fin >> line;
+  while (fin >> line) {
     std::stringstream str(line);
     for (size_t j = 0; j < kColumnsCount; ++j) {
       getline(str, cells[j], kDelimiter);
