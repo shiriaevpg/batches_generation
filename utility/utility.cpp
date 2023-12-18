@@ -12,9 +12,10 @@ long double GetLength(const Point& source, const Point& destination) {
   long double lonDelta = destination.longitude - source.longitude;
   latDelta *= kConvCoefficient;
   lonDelta *= kConvCoefficient;
-  long double angle = std::pow(std::sin(latDelta / 2), 2) +
-      std::pow(std::sin(lonDelta / 2), 2) +
+  long double side = std::sqrt(std::pow(std::sin(latDelta / 2), 2) +
+      std::pow(std::sin(lonDelta / 2), 2) *
       std::cos(source.latitude * kConvCoefficient) *
-          std::cos(destination.latitude * kConvCoefficient);
-  return angle * kEarthRadius;
+          std::cos(destination.latitude * kConvCoefficient));
+  long double angle = std::asin(side);
+  return angle * 2 * kEarthRadius;
 }

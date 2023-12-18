@@ -12,8 +12,7 @@ struct Point {
   Point() = default;
 };
 
-class Order {
- public:
+struct Order {
   Point destination;
   Point source;
   std::string claim;

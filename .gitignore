@@ -10,6 +10,7 @@
 .idea/
 .git/
 
-data/moscow_claims_2023-09-01.csv
+*.csv
+*.out
 
 *cmake-build-debug
