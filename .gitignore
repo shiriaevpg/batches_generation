@@ -12,5 +12,6 @@
 
 *.csv
 *.out
+*.html
 
 *cmake-build-debug
