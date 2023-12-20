@@ -21,11 +21,12 @@ int main(int argc, char** argv) {
   auto traces = SeparateOnTrace(orders);
   SimAnnealing<Mutator, DefaultScheduler> sim_annealing(orders);
   BatchT batch;
+  size_t max_len = 5;
   for (int i = 0; i < 10; ++i) {
-    auto lbatch = sim_annealing.GenerateBatch(traces[0], 10000);
-    auto len = lbatch.first.size();
-    if (len > batch.first.size() && len < 10) {
-      batch = lbatch;
+    auto l_batch = sim_annealing.GenerateBatch(traces[0], 10000);
+    auto len = l_batch.first.size();
+    if (len > batch.first.size() && len < max_len) {
+      batch = l_batch;
       break;
     }
   }
@@ -33,6 +34,8 @@ int main(int argc, char** argv) {
   for (auto id : batch.first) {
     out << orders[id].destination.latitude << ' '
         << orders[id].destination.longitude << '\n';
+    out << orders[id].source.latitude << ' '
+        << orders[id].source.longitude << '\n';
   }
   return 0;
 }
