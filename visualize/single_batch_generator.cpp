@@ -35,8 +35,6 @@ int main(int argc, char** argv) {
         << orders[id].source.longitude << '\n';
     out << orders[id].destination.latitude << ' '
         << orders[id].destination.longitude << '\n';
-    out << orders[id].source.latitude << ' '
-        << orders[id].source.longitude << '\n';
   }
   return 0;
 }
