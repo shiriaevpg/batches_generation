@@ -14,7 +14,6 @@ int main(int argc, char** argv) {
     std::cout << "Can't open file" << std::endl;
     return 1;
   }
-  out.clear();
   out.precision(20);
   Parser parser("../data/datasets/moscow_claims_2023-09-01-170.000000.csv");
   auto orders = parser.Get();
@@ -33,6 +32,8 @@ int main(int argc, char** argv) {
   for (auto id : batch.first) {
     out << orders[id].source.latitude << ' '
         << orders[id].source.longitude << '\n';
+  }
+  for (auto id : batch.second) {
     out << orders[id].destination.latitude << ' '
         << orders[id].destination.longitude << '\n';
   }
