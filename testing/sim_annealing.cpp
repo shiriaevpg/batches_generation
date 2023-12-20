@@ -11,11 +11,13 @@
 std::vector<Order> orders;
 std::vector<std::vector<size_t>> traces;
 std::vector<size_t> fattest;
+std::vector<size_t> for_test;
 
 static void BM_all(benchmark::State& state) {
   Gainer gainer(orders);
   SimAnnealing<Mutator, DefaultScheduler> sim_annealing(orders);
-  BatchT batch;
+  BatchT batch_10;
+  BatchT batch_100;
   long double gain;
   for (auto _ : state) {
     gain = 0;
@@ -25,7 +27,7 @@ static void BM_all(benchmark::State& state) {
     std::cout << "Average gain :" << gain / traces.size() << '\n';
   }
 }
-BENCHMARK(BM_all)->Arg(1000)->Arg(10000)->Arg(5000);
+BENCHMARK(BM_all);
 
 static void BM_fattest(benchmark::State& state) {
   Gainer gainer(orders);
