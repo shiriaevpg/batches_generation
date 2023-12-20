@@ -21,13 +21,12 @@ int main(int argc, char** argv) {
   auto traces = SeparateOnTrace(orders);
   SimAnnealing<Mutator, DefaultScheduler> sim_annealing(orders);
   BatchT batch;
-  size_t max_len = 5;
+  size_t max_len = 10;
   for (int i = 0; i < 10; ++i) {
     auto l_batch = sim_annealing.GenerateBatch(traces[0], 10000);
     auto len = l_batch.first.size();
     if (len > batch.first.size() && len < max_len) {
       batch = l_batch;
-      break;
     }
   }
   std::cout << batch.first.size() << std::endl;
