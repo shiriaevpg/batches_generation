@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
   SimAnnealing<Mutator, DefaultScheduler> sim_annealing(orders);
   BatchT batch;
   for (int i = 0; i < 10; ++i) {
-    auto lbatch = sim_annealing.GenerateBatch(traces[0], 1000);
+    auto lbatch = sim_annealing.GenerateBatch(traces[0], 10000);
     auto len = lbatch.first.size();
     if (len > batch.first.size() && len < 10) {
       batch = lbatch;
