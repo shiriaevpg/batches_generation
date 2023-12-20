@@ -8,4 +8,5 @@ find_package(benchmark REQUIRED)
 
 #add_executable(proba test.cpp)
 add_executable(proba sim_annealing.cpp)
+add_executable(visualizer ../visualize/single_batch_generator.cpp)
 target_link_libraries(proba benchmark::benchmark)
