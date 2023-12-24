@@ -5,7 +5,7 @@
 
 int main() {
   std::string filename = "datasets/moscow_claims_2023-09-01.csv";
-  Parser parser(filename.c_str());
+  Parser parser(filename.c_str(), true);
   const auto& orders = parser.Get();
   auto traces = SeparateOnTrace(orders);
   std::cout << "End parsing" << std::endl;
