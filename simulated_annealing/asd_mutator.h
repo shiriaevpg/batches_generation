@@ -32,6 +32,7 @@ class Mutator {
   };
 
   Mutator(const std::vector<Order>& orders, const std::vector<size_t>& trace);
+  Mutator(const Mutator&) = default;
   Mutation operator()() const;
   void Add(size_t id);
   void Change(const Mutation& mutation);
@@ -48,6 +49,8 @@ class Mutator {
   std::map<size_t, size_t> src_id_;  // return id in sources по pos
   std::map<size_t, size_t> dest_pos_;  // аналогично
   std::map<size_t, size_t> dest_id_;
+
+//  Gainer gainer_;  // для стресс тестов
 
   //  TODO тут хз какие вероятности, можно сделать так, чтобы когда в батче мало заказов,
   //  вероятность добавить была больше и наоборот
@@ -222,6 +225,10 @@ long double Mutator::GetRemoveDiff(size_t id) {
   auto next_src = GetNextSrc(it_src);
   auto prev_dest = GetPrevDest(it_dest);
   auto next_dest = GetNextDest(it_dest);
+  if (it_dest == dest_id_.begin() and it_src == (--src_id_.end())) {  // если рядом, работает другая формула
+    return GetLength(prev_src, src) + GetLength(dest, next_dest) -
+           (GetLength(prev_src, next_dest) + kLengthApproach);
+  }
   return GetLength(prev_src, src) + GetLength(src, next_src) +
          GetLength(prev_dest, dest) + GetLength(dest, next_dest) -
          (GetLength(src, dest) + GetLength(prev_src, next_src) +
@@ -247,30 +254,36 @@ long double Mutator::GetSwapSrcDiff(size_t pos1, size_t pos2) {
   auto prev2 = GetPrevSrc(it2);
   auto next1 = GetNextSrc(it1);
   auto next2 = GetNextSrc(it2);
+  if (++it1 == it2) {  // если рядом, работает другая формула
+    return GetSwapNearDiff(prev1, src1, src2, next2);
+  }
+  if (++it2 == --it1) {
+    return GetSwapNearDiff(prev2, src2, src1, next1);
+  }
   return GetSwapDiff(prev1, src1, next1, prev2, src2, next2);
 }
 
 long double Mutator::GetSwapDestDiff(size_t pos1, size_t pos2) {
   auto it1 = dest_id_.find(pos1);
   auto it2 = dest_id_.find(pos2);
-  const Point& src1 = orders_[it1->second].destination;
-  const Point& src2 = orders_[it2->second].destination;
+  const Point& dest1 = orders_[it1->second].destination;
+  const Point& dest2 = orders_[it2->second].destination;
   auto prev1 = GetPrevDest(it1);
   auto prev2 = GetPrevDest(it2);
   auto next1 = GetNextDest(it1);
   auto next2 = GetNextDest(it2);
-  return GetSwapDiff(prev1, src1, next1, prev2, src2, next2);
+  if (++it1 == it2) {
+    return GetSwapNearDiff(prev1, dest1, dest2, next2);
+  }
+  if (++it2 == --it1) {
+    return GetSwapNearDiff(prev2, dest2, dest1, next1);
+  }
+  return GetSwapDiff(prev1, dest1, next1, prev2, dest2, next2);
 }
 
 long double Mutator::GetSwapDiff(
     const Point& prev1, const Point& point1, const Point& next1,
     const Point& prev2, const Point& point2, const Point& next2) {
-  if (prev2 == point1) {  // в случае, если 2 точки рядом, работает другая формула
-    return GetSwapNearDiff(prev1, point1, point2, next2);
-  }
-  if (prev1 == point2) {
-    return GetSwapNearDiff(prev2, point2, point1, next1);
-  }
   return GetLength(prev1, point1) + GetLength(point1, next1) +
          GetLength(prev2, point2) + GetLength(point2, next2) -
          (GetLength(prev1, point2) + GetLength(point2, next1) +

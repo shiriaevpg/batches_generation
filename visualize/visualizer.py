@@ -1,43 +1,56 @@
 import folium
 from datetime import datetime
+import random
 
-# Список координат в формате (широта, долгота)
-coords = []
+# Определим список из 12 основных цветов
+basic_colors = [
+    '#FF0000',  # красный
+    '#FFA500',  # оранжевый
+    '#FFFF00',  # желтый
+    '#008000',  # зеленый
+    '#00FFFF',  # голубой
+    '#0000FF',  # синий
+    '#800080',  # пурпурный
+    '#FF00FF',  # фуксия
+    '#A52A2A',  # коричневый
+    '#FFC0CB',  # розовый
+    '#808080',  # серый
+    '#000000',  # черный
+]
 
+# Открываем файл для чтения
 with open('batch.txt') as f:
-    for line in f:
-        lat, lon = map(float, line.strip().split())
-        coords.append((lat, lon))
+    # Считываем количество маршрутов
+    n = int(f.readline().strip())
+    routes = []  # Список для хранения маршрутов
 
-# Создание объекта карты с центром на первых координатах и установкой начального уровня масштабирования
-my_map = folium.Map(location=coords[0], zoom_start=14)
+    # Читаем каждый маршрут
+    for _ in range(n):
+        m = int(f.readline().strip())  # количество координат для текущего маршрута
+        coords = []  # Список координат текущего маршрута
 
-# Добавление линии на карту
-folium.PolyLine(coords, color='blue', weight=2.5, opacity=1).add_to(my_map)
-
-for i in range(int(len(coords) / 2)):
-    folium.Marker(
-        location=coords[i],
-        icon=folium.DivIcon(
-            icon_size=(10, 10),
-            icon_anchor=(0, 0),
-            html=f'<div style="font-size: 15pt; color : cadeblue">{i + 1}</div>'
-        )
-    ).add_to(my_map)
-
-for i in range(int(len(coords) / 2)):
-    folium.Marker(
-        location=coords[int(len(coords) / 2) + i],
-        icon=folium.DivIcon(
-            icon_size=(10, 10),
-            icon_anchor=(0, 0),
-            html=f'<div style="font-size: 15pt; color : black">{i + 1}</div>'
-        )
-    ).add_to(my_map)
+        # Читаем координаты для текущего маршрута
+        for _ in range(m):
+            lat, lon = map(float, f.readline().strip().split())
+            coords.append((lat, lon))
 
 # Сохранение карты в HTML-файл
+routes.append(coords)  # Добавляем маршрут в список маршрутов
 
-current_datetime = datetime.now()
-current_datetime_str = current_datetime.strftime("%Y-%m-%d_%H:%M:%S")
-my_map.save(f"maps/map_{current_datetime_str}.html")
+# Создаем объект карты (используем первые координаты первого маршрута для центрирования карты)
+if routes:
+    my_map = folium.Map(location=routes[0][0], zoom_start=14)
 
+    # Добавляем все маршруты на карту
+    for route in routes:
+        color = random.choice(basic_colors)  # Выбираем случайный цвет для маршрута
+        folium.PolyLine(route, color=color, weight=2.5, opacity=1).add_to(my_map)
+
+    # Сохраняем карту в HTML-файл
+    current_datetime = datetime.now()
+    current_datetime_str = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"maps/map_{current_datetime_str}.html"
+    my_map.save(filename)
+    print(f"Map saved to {filename}")
+else:
+    print("No routes to display.")
