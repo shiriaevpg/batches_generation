@@ -20,6 +20,18 @@ std::mt19937 gen(rd());
 
 long double GetLength(const Point& source, const Point& destination); // возвращает длину маршрута в километрах
 
+long double GetLength(const BatchT &batch, const std::vector<Order> &orders) {
+  long double len = 0;
+  for (size_t i = 1; i < batch.first.size(); ++i) {
+    len += GetLength(orders[batch.first[i - 1]].destination, orders[batch.first[i]].source);
+  }
+  len += GetLength(orders[batch.first.back()].destination, orders[batch.second[0]].destination);
+  for (size_t i = 1; i < batch.first.size(); ++i) {
+    len += GetLength(orders[batch.first[i - 1]].destination, orders[batch.first[i]].destination);
+  }
+  return len;
+}
+
 template <typename SetT, typename Func>  // рандомный элемент из set/map
 size_t GetRandomElement(const SetT& set, Func&& func) {  // func нужен, чтобы избежать копипасты, в случае когда ищу по set и map
   auto min_element = *set.begin();
