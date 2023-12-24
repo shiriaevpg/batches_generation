@@ -1,12 +1,13 @@
 #pragma once
 #include "order.h"
 #include "make_other.h"
-#include "../utility/utility.cpp"
 
 #include <vector>
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
+
+long double GetLength(const Point& source, const Point& destination);
 
 bool IsInMoscow(const Point& point) {
   static const Point kMoscowCenter = {55.753995, 37.614069};

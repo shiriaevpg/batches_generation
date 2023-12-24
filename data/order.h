@@ -10,6 +10,10 @@ struct Point {
   constexpr Point(long double latitude, long double longitude);
   Point(const Point&) = default;
   auto operator<=>(const Point&) const = default;
+  Point& operator+=(const Point& other);
+  Point& operator-=(const Point& other);
+  Point& operator/=(long double divider);
+  Point& operator*=(long double multiplier);
   Point() = default;
 };
 
@@ -31,6 +35,50 @@ Point::Point(const std::string& str_latitude, const std::string& str_longitude)
       longitude(std::stold(str_longitude)) {}
 
 constexpr Point::Point(long double latitude, long double longitude) : latitude(latitude), longitude(longitude) {}
+
+Point& Point::operator+=(const Point& other) {
+  longitude += other.longitude;
+  latitude += other.latitude;
+  return *this;
+}
+
+Point& Point::operator-=(const Point& other) {
+  longitude -= other.longitude;
+  latitude -= other.latitude;
+  return *this;
+}
+
+Point& Point::operator/=(long double divider) {
+  longitude /= divider;
+  latitude /= divider;
+  return *this;
+}
+
+Point& Point::operator*=(long double multiplier) {
+  longitude *= multiplier;
+  latitude *= multiplier;
+  return *this;
+}
+
+Point operator+(Point point, const Point& other) {
+  point += other;
+  return point;
+}
+
+Point operator-(Point point, const Point& other) {
+  point -= other;
+  return point;
+}
+
+Point operator/(Point point, long double divider) {
+  point /= divider;
+  return point;
+}
+
+Point operator*(long double divider, Point point) {
+  point *= divider;
+  return point;
+}
 
 Order::Order(const std::string& dest_lat, const std::string& dest_lon,
              const std::string& src_lat, const std::string& src_lon,

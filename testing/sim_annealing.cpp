@@ -1,5 +1,6 @@
 #include "../simulated_annealing/sim_annealing.h"
 #include "../simulated_annealing/asd_mutator.h"
+#include "../simulated_annealing/asd_mutator_cm.h"
 #include "../utility/utility.cpp"
 
 #include <iomanip>
@@ -12,6 +13,7 @@ std::vector<Order> orders;
 std::vector<std::vector<size_t>> traces;
 std::vector<size_t> fattest;
 
+template <typename Mutator>
 static void BM_all(benchmark::State& state) {
   Gainer gainer(orders);
   SimAnnealing<Mutator, DefaultScheduler> sim_annealing(orders);
@@ -27,10 +29,13 @@ static void BM_all(benchmark::State& state) {
       perc_gain += gainer.GetPercent(batch);
       abs_gain += gainer.GetAbs(batch);
     }
-    std::cout << "Average gain :" << abs_gain / traces.size() << "kilometers or " << perc_gain / traces.size() << " % " << '\n';
+    std::cout << "Average gain : " << abs_gain / traces.size() << " kilometers or " << perc_gain / traces.size() << " % " << '\n';
   }
 }
-BENCHMARK(BM_all)->Arg(10000)->Arg(100000);
+
+BENCHMARK(BM_all<MutatorCM>)->Arg(10000);
+
+BENCHMARK(BM_all<Mutator>)->Arg(10000);
 
 static void BM_fattest(benchmark::State& state) {
   Gainer gainer(orders);
