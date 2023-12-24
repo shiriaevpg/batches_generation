@@ -54,7 +54,8 @@ SimAnnealing<Mutator, Scheduler>::GenerateBatch(
     }
     temp = scheduler_(temp);
   }
-  return mutator.GetBatch();
+  auto batch = mutator.GetBatch();
+  return batch;
 }
 
 template <typename Mutator, typename Scheduler>
