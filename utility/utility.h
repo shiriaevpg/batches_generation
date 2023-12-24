@@ -60,11 +60,34 @@ class Gainer {
 
  public:
   explicit Gainer(const std::vector<Order>& orders) : orders_(orders) {}
-  [[nodiscard]] long double Get(const BatchT& batch) const;
+  [[nodiscard]] std::pair<long double, long double> GetLengths(const BatchT& batch) const; // return default_len and batch_len
+  [[nodiscard]] long double GetAbs(const BatchT& batch) const;
+  [[nodiscard]] long double GetPercent(const BatchT& batch) const;
 };
 
-long double Gainer::Get(const BatchT& batch) const {
+std::pair<long double, long double> Gainer::GetLengths(const BatchT& batch) const {
   long double default_len = GetLength(orders_[batch.first[0]].source, orders_[batch.first[0]].destination);
-  long double batch_len = GetLength(batch, orders_);
-  return default_len - batch_len + kLengthApproach * (batch.second.size() - 1);
+  long double batch_len = 0;
+  for (size_t i = 1; i < batch.first.size(); ++i) {
+    default_len += GetLength(orders_[batch.first[i]].source, orders_[batch.first[i]].destination);
+    batch_len += GetLength(orders_[batch.first[i - 1]].source, orders_[batch.first[i]].source);
+  }
+  batch_len += GetLength(orders_[batch.first[batch.first.size() - 1]].source, orders_[batch.second[0]].destination);
+  for (size_t i = 1; i < batch.first.size(); ++i) {
+    batch_len += GetLength(orders_[batch.second[i - 1]].destination, orders_[batch.second[i]].destination);
+  }
+  return {default_len + kLengthApproach * (batch.second.size() - 1), batch_len};
+}
+
+long double Gainer::GetAbs(const BatchT& batch) const {
+  auto [default_len, batch_len] = GetLengths(batch);
+  return default_len - batch_len;
+}
+
+long double Gainer::GetPercent(const BatchT &batch) const {
+  auto [default_len, batch_len] = GetLengths(batch);
+  if (default_len == 0) {
+    return 100;
+  }
+  return GetAbs(batch) / default_len * 100;
 }

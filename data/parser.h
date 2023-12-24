@@ -1,10 +1,23 @@
 #pragma once
 #include "order.h"
+#include "make_other.h"
 
 #include <vector>
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
+
+long double GetLength(const Point& source, const Point& destination);
+
+bool IsInMoscow(const Point& point) {
+  static const Point kMoscowCenter = {55.753995, 37.614069};
+  static const long double kMoscowRadius = 20;
+  return GetLength(point, kMoscowCenter) <= kMoscowRadius;
+}
+
+bool IsInMoscow(const Order& order) {
+  return IsInMoscow(order.source) and IsInMoscow(order.destination);
+}
 
 class Parser {
  private:
@@ -19,15 +32,14 @@ class Parser {
   static const char kDelimiter = ',';
 
   std::vector<Order> orders_;
-
  public:
-  explicit Parser(const char* filepath, size_t count_rows = kDefaultCountRows);
+  explicit Parser(const char* filepath, bool drop_out_moscow = false, size_t count_rows = kDefaultCountRows);
   [[nodiscard]] const std::vector<Order>& Get() const;
 };
 
 const std::vector<Order>& Parser::Get() const { return orders_; }
 
-Parser::Parser(const char* filepath, size_t count_rows) {
+Parser::Parser(const char* filepath, bool drop_out_moscow, size_t count_rows) {
   orders_.reserve(count_rows);
   std::fstream fin;
   fin.open(filepath, std::ios::in);
@@ -43,8 +55,14 @@ Parser::Parser(const char* filepath, size_t count_rows) {
                          cells[kSrcLatNumber], cells[kSrcLonNumber],
                          std::move(cells[kClaimIdNumber]),
                          std::move(cells[kTraceIdNumber]));
+    if (drop_out_moscow and !IsInMoscow(orders_.back())) {
+      orders_.pop_back();
+    }
   }
   fin.close();
+  if (drop_out_moscow) {
+    MakeDataset(std::string(filepath), orders_, true);
+  }
 }
 
 std::vector<std::vector<size_t>> SeparateOnTrace(

@@ -22,7 +22,8 @@ class SimAnnealing {
 
  public:
   static const size_t kDefaultIterCount = 10000;
-  static long double CountTime(const std::vector<std::vector<size_t>>& traces);
+  // считает примерное время работы:
+  static long double CountTime(const std::vector<std::vector<size_t>>& traces, size_t iter_count=kDefaultIterCount);
   explicit SimAnnealing(const std::vector<Order>& orders);
   BatchT GenerateBatch(const std::vector<size_t>& trace, size_t iter_count = kDefaultIterCount,
                        long double temp = kDefaultTemperature);
@@ -59,7 +60,7 @@ SimAnnealing<Mutator, Scheduler>::GenerateBatch(
 }
 
 template <typename Mutator, typename Scheduler>
-long double SimAnnealing<Mutator, Scheduler>::CountTime(const std::vector<std::vector<size_t>>& traces) {
+long double SimAnnealing<Mutator, Scheduler>::CountTime(const std::vector<std::vector<size_t>>& traces, size_t iter_count) {
   std::unordered_map<size_t, size_t> counts;
   for (const auto& trace : traces) {
     if (counts.find(trace.size()) == counts.end()) {
@@ -72,5 +73,5 @@ long double SimAnnealing<Mutator, Scheduler>::CountTime(const std::vector<std::v
   for (const auto& [size, count] : counts) {
     ans += static_cast<long double>(count) * std::log2(size);
   }
-  return ans * kDefaultIterCount / 10e5;
+  return 1.2 * ans * iter_count / 10e5;
 }

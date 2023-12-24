@@ -1,5 +1,5 @@
 #include "sim_annealing.h"
-#include "asd_mutator.h"
+#include "asd_mutator_cm.h"
 #include "../utility/utility_debug.cpp"
 
 #include <iostream>
@@ -17,13 +17,13 @@ std::ostream& operator<<(std::ostream& out, const BatchT& batch) {
 void EffectivityTest(const std::vector<size_t>& iter_counts, size_t size, const std::vector<Order>& trace) {
   auto orders = MakeOrders(std::vector<std::vector<Order>>(size, trace));
   auto traces = SeparateOnTrace(orders);
-  SimAnnealing<Mutator, DefaultScheduler> sim_annealing(orders);
+  SimAnnealing<MutatorCM, DefaultScheduler> sim_annealing(orders);
   Gainer gainer(orders);
   long double sum_gain;
   for (auto iter : iter_counts) {
     sum_gain = 0;
     for (const auto& tr : traces) {
-      sum_gain += gainer.Get(sim_annealing.GenerateBatch(tr, iter));
+      sum_gain += gainer.GetAbs(sim_annealing.GenerateBatch(tr, iter));
     }
     std::cout << "Average gain with iter_count " << iter << " is " << sum_gain / size << std::endl;
   }

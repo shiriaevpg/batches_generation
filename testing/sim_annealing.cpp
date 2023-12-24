@@ -1,5 +1,6 @@
 #include "../simulated_annealing/sim_annealing.h"
 #include "../simulated_annealing/asd_mutator.h"
+#include "../simulated_annealing/asd_mutator_cm.h"
 #include "../utility/utility.cpp"
 
 #include <iomanip>
@@ -12,27 +13,36 @@ std::vector<Order> orders;
 std::vector<std::vector<size_t>> traces;
 std::vector<size_t> fattest;
 
+template <typename Mutator>
 static void BM_all(benchmark::State& state) {
   Gainer gainer(orders);
   SimAnnealing<Mutator, DefaultScheduler> sim_annealing(orders);
+  long double abs_gain;
+  long double perc_gain;
+  std::cout << "Примерное время тестирования: " << SimAnnealing<Mutator, DefaultScheduler>::CountTime(traces, state.range(0)) / 60 << " минут" << std::endl;
   BatchT batch;
-  long double gain;
   for (auto _ : state) {
-    gain = 0;
+    abs_gain = 0;
+    perc_gain = 0;
     for (const auto& trace : traces) {
-      gain += gainer.Get(sim_annealing.GenerateBatch(trace, state.range(0)));
+      batch = sim_annealing.GenerateBatch(trace, state.range(0));
+      perc_gain += gainer.GetPercent(batch);
+      abs_gain += gainer.GetAbs(batch);
     }
-    std::cout << "Average gain :" << gain / traces.size() << '\n';
+    std::cout << "Average gain : " << abs_gain / traces.size() << " kilometers or " << perc_gain / traces.size() << " % " << '\n';
   }
 }
-BENCHMARK(BM_all)->Arg(1000)->Arg(10000)->Arg(5000);
+
+BENCHMARK(BM_all<MutatorCM>)->Arg(10000);
+
+BENCHMARK(BM_all<Mutator>)->Arg(10000);
 
 static void BM_fattest(benchmark::State& state) {
   Gainer gainer(orders);
   SimAnnealing<Mutator, DefaultScheduler> sim_annealing(orders);
   BatchT batch;
   for (auto _ : state) {
-    std::cout << "Gain :" << gainer.Get(sim_annealing.GenerateBatch(fattest, state.range(0))) << '\n';
+    std::cout << "Gain :" << gainer.GetAbs(sim_annealing.GenerateBatch(fattest, state.range(0))) << '\n';
   }
 }
 //BENCHMARK(BM_fattest)->Arg(1000)->Arg(10000)->Arg(100000);
@@ -43,7 +53,7 @@ int main(int argc, char** argv) {
   Parser parser(filename.c_str());
   orders = parser.Get();
   traces = SeparateOnTrace(orders);
-  std::cout << "parsing " << filename << " done" << std::endl;
+  std::cout << "parsing " << filename << " done" << std::endl;;
   const size_t kFattestSize = 500;
   for (const auto& trace : traces) {
     if (trace.size() == kFattestSize) {
