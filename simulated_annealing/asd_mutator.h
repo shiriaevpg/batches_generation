@@ -31,7 +31,7 @@ class Mutator {
 
   Mutator(const std::vector<Order>& orders, const std::vector<size_t>& trace);
   Mutator(const Mutator&) = default;
-  Mutation operator()() const;
+  Mutation operator()(long double temp) const;
   void Add(size_t id);
   void Change(const Mutation& mutation);
   BatchT GetBatch();
@@ -158,7 +158,8 @@ void Mutator::Change(const Mutator::Mutation& mutation) {
   }
 }
 
-Mutator::Mutation Mutator::operator()() const {
+Mutator::Mutation Mutator::operator()(long double temp) const {
+  std::ignore = temp;
   std::discrete_distribution<size_t> distr({GetRemoveProb(), GetAddProb(), GetSwapSrcProb(), GetSwapDestProb()});
   MutationType mutation_type{distr(gen)};
   if (mutation_type == MutationType::kRemove) {

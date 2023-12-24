@@ -28,7 +28,7 @@ class MutatorCM {
 
   MutatorCM(const std::vector<Order>& orders, const std::vector<size_t>& trace);
   MutatorCM(const MutatorCM&) = default;
-  Mutation operator()() const;
+  Mutation operator()(long double temp) const;
   void Add(size_t id);
   void Change(const Mutation& mutation);
   BatchT GetBatch();
@@ -162,7 +162,7 @@ void MutatorCM::Change(const MutatorCM::Mutation& mutation) {
   }
 }
 
-MutatorCM::Mutation MutatorCM::operator()() const {
+MutatorCM::Mutation MutatorCM::operator()(long double temp) const {
   std::discrete_distribution<size_t> distr({GetRemoveProb(), GetAddProb(), GetSwapSrcProb(), GetSwapDestProb()});
   MutationType mutation_type{distr(gen)};
   if (mutation_type == MutationType::kRemove) {
@@ -170,14 +170,16 @@ MutatorCM::Mutation MutatorCM::operator()() const {
   }
   if (mutation_type == MutationType::kAdd) {
     auto new_claim = GetRandomElement(not_used_, [](size_t a) { return a; });
-    size_t iter_count = 1;
-    while (iter_count < kTryingAddCount and GetLength(orders_[new_claim].source, center_mass_) +
-           GetLength(orders_[new_claim].destination, center_mass_) > 2 * kCMThreshold) {
-      ++iter_count;
-      new_claim = GetRandomElement(not_used_, [](size_t a) { return a; });
-    }
-    if (iter_count == kTryingAddCount) {
-      return {MutationType::kNothing, 0};
+    if (temp * 100000 >= 1) {
+      size_t iter_count = 1;
+      while (iter_count < kTryingAddCount and GetLength(orders_[new_claim].source, center_mass_) +
+          GetLength(orders_[new_claim].destination, center_mass_) > 2 * kCMThreshold) {
+        ++iter_count;
+        new_claim = GetRandomElement(not_used_, [](size_t a) { return a; });
+      }
+      if (iter_count == kTryingAddCount) {
+        return {MutationType::kNothing, 0};
+      }
     }
     return {mutation_type, new_claim};
   }

@@ -44,9 +44,9 @@ SimAnnealing<Mutator, Scheduler>::GenerateBatch(
   auto begin_claim = distribution(gen);  // закидываем рандомный заказ в батч
   mutator.Add(trace[begin_claim]);
   long double prob;
-  decltype(mutator()) changes;  // сюда пишем изменения
+  decltype(mutator(temp)) changes;  // сюда пишем изменения
   for (size_t i = 0; i < iter_count; ++i) {
-    changes = mutator();
+    changes = mutator(temp);
     prob = mutator.GetProb(changes, temp);
     std::discrete_distribution<> distr({static_cast<double>(1 - prob), static_cast<double>(prob)});
     // не знаю почему, но discrete_distribution принимает только даблы
