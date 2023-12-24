@@ -1,6 +1,3 @@
-//
-// Created by vlad on 20.12.23.
-//
 #include "../simulated_annealing/sim_annealing.h"
 #include "../simulated_annealing/asd_mutator.h"
 #include "../utility/utility.cpp"
