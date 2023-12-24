@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <iostream>
 
 struct Point {
   long double latitude = -1;
@@ -43,3 +44,9 @@ Order::Order(const Point& source, const Point& destination)
     : destination(destination), source(source) {}
 
 const Point kDefaultPoint = Point();
+
+std::ostream& operator<<(std::ostream& out, const Order& order) {
+  out << "src: " << order.source.latitude << ' ' << order.source.longitude << '\n';
+  out << "dest: " << order.destination.latitude << ' ' << order.destination.longitude << '\n';
+  return out;
+}

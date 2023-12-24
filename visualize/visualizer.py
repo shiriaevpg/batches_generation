@@ -34,7 +34,8 @@ with open('batch.txt') as f:
             lat, lon = map(float, f.readline().strip().split())
             coords.append((lat, lon))
 
-        routes.append(coords)  # Добавляем маршрут в список маршрутов
+# Сохранение карты в HTML-файл
+routes.append(coords)  # Добавляем маршрут в список маршрутов
 
 # Создаем объект карты (используем первые координаты первого маршрута для центрирования карты)
 if routes:
