@@ -1,6 +1,7 @@
 #pragma once
 #include "order.h"
 #include "make_other.h"
+#include "../utility/utility.cpp"
 
 #include <vector>
 #include <fstream>
@@ -8,8 +9,9 @@
 #include <unordered_map>
 
 bool IsInMoscow(const Point& point) {
-  constexpr static std::pair<Point, Point> kMoscowBoundingBox = {{55.4913, 37.1316}, {56.0212, 37.9674}};
-  return kMoscowBoundingBox.first <= point and point <= kMoscowBoundingBox.second;
+  static const Point kMoscowCenter = {55.753995, 37.614069};
+  static const long double kMoscowRadius = 20;
+  return GetLength(point, kMoscowCenter) <= kMoscowRadius;
 }
 
 bool IsInMoscow(const Order& order) {

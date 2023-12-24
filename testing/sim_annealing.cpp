@@ -15,16 +15,19 @@ std::vector<size_t> fattest;
 static void BM_all(benchmark::State& state) {
   Gainer gainer(orders);
   SimAnnealing<Mutator, DefaultScheduler> sim_annealing(orders);
-  long double gain;
+  long double abs_gain;
+  long double perc_gain;
   std::cout << "Примерное время тестирования: " << SimAnnealing<Mutator, DefaultScheduler>::CountTime(traces, state.range(0)) / 60 << " минут" << std::endl;
   BatchT batch;
   for (auto _ : state) {
-    gain = 0;
+    abs_gain = 0;
+    perc_gain = 0;
     for (const auto& trace : traces) {
       batch = sim_annealing.GenerateBatch(trace, state.range(0));
-      gain += gainer.GetPercent(batch);
+      perc_gain += gainer.GetPercent(batch);
+      abs_gain += gainer.GetAbs(batch);
     }
-    std::cout << "Average gain :" << gain / traces.size() << '\n';
+    std::cout << "Average gain :" << abs_gain / traces.size() << "kilometers or " << perc_gain / traces.size() << " % " << '\n';
   }
 }
 BENCHMARK(BM_all)->Arg(10000)->Arg(100000);
