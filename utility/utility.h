@@ -91,3 +91,13 @@ long double Gainer::GetPercent(const BatchT &batch) const {
   }
   return GetAbs(batch) / default_len * 100;
 }
+
+struct Statistic {
+  size_t size;
+  long double old_len;
+  long double len;
+  [[nodiscard]] long double GetAverageLen() const {  return len / size; }
+  [[nodiscard]] long double GetOldAverageLen() const {  return old_len / size; }
+  [[nodiscard]] long double GetAbsGain() const { return old_len - len; }
+  [[nodiscard]] long double GetPercentGain() const { return old_len == 0 ? 100 : len / old_len * 100; }
+};

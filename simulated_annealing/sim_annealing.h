@@ -17,6 +17,8 @@ class SimAnnealing {
  private:
   const std::vector<Order>& orders_;
   Scheduler scheduler_;  // изменяет температуру
+  size_t iter_count_;
+  long double begin_temp_;
 
   constexpr static long double kDefaultTemperature = 1;
 
@@ -24,28 +26,28 @@ class SimAnnealing {
   static const size_t kDefaultIterCount = 10000;
   // считает примерное время работы:
   static long double CountTime(const std::vector<std::vector<size_t>>& traces, size_t iter_count=kDefaultIterCount);
-  explicit SimAnnealing(const std::vector<Order>& orders);
-  BatchT GenerateBatch(const std::vector<size_t>& trace, size_t iter_count = kDefaultIterCount,
-                       long double temp = kDefaultTemperature);
+  explicit SimAnnealing(const std::vector<Order>& orders, size_t iter_count = kDefaultIterCount, long double begin_temp = kDefaultTemperature);
+  [[nodiscard]] BatchT GenerateBatch(const std::vector<size_t>& trace) const;
 };
 
 template <typename Mutator, typename Scheduler>
-SimAnnealing<Mutator, Scheduler>::SimAnnealing(const std::vector<Order>& orders) : orders_(orders) {}
+SimAnnealing<Mutator, Scheduler>::SimAnnealing(const std::vector<Order>& orders, size_t iter_count, long double begin_temp)
+    : orders_(orders), iter_count_(iter_count), begin_temp_(begin_temp) {}
 
 template <typename Mutator, typename Scheduler>
 std::pair<std::vector<size_t>, std::vector<size_t>>
-SimAnnealing<Mutator, Scheduler>::GenerateBatch(
-    const std::vector<size_t>& trace, size_t iter_count, long double temp) {
+SimAnnealing<Mutator, Scheduler>::GenerateBatch(const std::vector<size_t>& trace) const {
   if (trace.size() == 1) {
     return {trace, trace};
   }
+  auto temp = begin_temp_;
   Mutator mutator(orders_, trace);
   std::uniform_int_distribution<size_t> distribution(0, trace.size() - 1);
   auto begin_claim = distribution(gen);  // закидываем рандомный заказ в батч
   mutator.Add(trace[begin_claim]);
   long double prob;
   decltype(mutator(temp)) changes;  // сюда пишем изменения
-  for (size_t i = 0; i < iter_count; ++i) {
+  for (size_t i = 0; i < iter_count_; ++i) {
     changes = mutator(temp);
     prob = mutator.GetProb(changes, temp);
     std::discrete_distribution<> distr({static_cast<double>(1 - prob), static_cast<double>(prob)});

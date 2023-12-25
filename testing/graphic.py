@@ -1,16 +1,18 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import datetime
-
-# Здесь должны быть данные или код для их генерации.
-# Пример данных для демонстрации:
+import sys
 
 a, b, n = [], [], []
 
-filename = "statistics.txt"
+in_file = sys.argv[1]
 # Чтение данных из файла
-with open(filename, 'r') as file:
+with open(in_file, 'r') as file:
+    flag = True
     for line in file:
+        if flag:
+            benchmark = float(line)
+            flag = False
+            continue
         # Разделяем строку по пробелам и удаляем лишние пробелы
         row = line.strip().split()
         # Преобразуем строки в вещественные числа и добавляем их в соответствующие списки
@@ -23,19 +25,42 @@ size = np.array(n)
 old_len = np.array(a)
 new_len = np.array(b)
 
+diff = old_len - new_len
+av_percent = 0
+
+av_unit_gain = 0
+
 for i in range(len(old_len)):
     if old_len[i] == 0:
+        av_percent += 100
         old_len[i] = 1
         new_len[i] = 1
+    else:
+        av_percent += (diff[i] / old_len[i]) * 100
+        av_unit_gain += diff[i] / size[i]
+
+av_percent /= len(old_len)
+av_unit_gain /= len(old_len)
 
 # Настройка размера фигуры для трех графиков
-plt.figure(figsize=(15, 5))
-
+fig = plt.figure(figsize=(15, 7))
+fig.suptitle(f"{sys.argv[3]}, Время генерации батча: {benchmark} сек, средний процент экономии: {av_percent}, "
+             f"удельная выгода {av_unit_gain} км/размер батча")
 max_size = max(size)
 sizes = np.array([0] * (int(max_size) + 1))
+sums = np.array([0] * (int(max_size) + 1))
 
-for sz in size:
-    sizes[int(sz)] += 1
+
+for i in range(len(old_len)):
+    sizes[int(size[i])] += 1
+    sums[int(size[i])] += old_len[i] - new_len[i]
+
+for i in range(len(sizes)):
+    if sizes[i] != 0:
+        sums[i] /= sizes[i]
+
+other_sums = [sums[i] / i for i in range(len(sums)) if sums[i] != 0]
+sums = [sums[i] for i in range(len(sums)) if sums[i] != 0]
 
 # Исправленный Второй график: Распределение количества заказов в батче
 plt.subplot(1, 3, 1)  # 1 строка, 3 колонки, 2-й график
@@ -48,21 +73,18 @@ plt.yscale('log')
 
 # Первый график: Гистограмма зависимости a/b от n
 plt.subplot(1, 3, 2)  # 1 строка, 3 колонки, 1-й график
-plt.bar(size, old_len - new_len, color='blue')
+plt.plot(sums, color='blue')
 plt.xlabel('Количество заказов в батче')
 plt.ylabel('Метрика (уменьшенеие длины батча в км)')
 
 # Третий график: Зависимость a/b от b (обычный график)
 plt.subplot(1, 3, 3)  # 1 строка, 3 колонки, 3-й график
-plt.bar(size, old_len / new_len, color='green')
-plt.xlabel('Длина до (км)')
-plt.ylabel('Относительная длина батча после применения алгоритма')
+plt.plot(other_sums, color='green')
+plt.xlabel('Размер батча')
+plt.ylabel('Удельная метрика')
 
 # Отображаем всю картинку с графиками
 plt.tight_layout()  # автоматически подгоняет графики, чтобы они не перекрывали друг друга
 
-current_datetime = datetime.datetime.now()
-current_datetime_str = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
-
 # Показываем гистограмму
-plt.savefig('images/histogram.png')
+plt.savefig(sys.argv[2])
