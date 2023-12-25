@@ -26,7 +26,9 @@ class MutatorCM {
     Mutation() = default;
   };
 
-  MutatorCM(const std::vector<Order>& orders, const std::vector<size_t>& trace);
+  MutatorCM(const std::vector<Order>& orders, const std::vector<size_t>& trace,
+          long double remove_prob = kRemoveProb, long double add_prob = kAddProb,
+          long double swap_src_prob = kSwapSrcProb, long double swap_dest_prob = kSwapDestProb, long double cm_threshold=kCMThreshold);
   MutatorCM(const MutatorCM&) = default;
   Mutation operator()(long double temp) const;
   void Add(size_t id);
@@ -46,6 +48,12 @@ class MutatorCM {
   std::map<size_t, size_t> dest_id_;
   Point center_mass_ = {0, 0};
 
+  long double remove_prob_;
+  long double add_prob_;
+  long double swap_src_prob_;
+  long double swap_dest_prob_;
+  long double cm_threshold_;
+
 //  Gainer gainer_;  // для стресс тестов
 
   //  TODO тут хз какие вероятности, можно сделать так, чтобы когда в батче мало заказов,
@@ -58,10 +66,10 @@ class MutatorCM {
   constexpr static double kCMThreshold = 10;  // если расстояние от cm больше threshold, то не добавляем точку
   static const size_t kTryingAddCount = 10; // выбираем kTryingAddCount раз точку, которую надо добавить, если не получилось, то мутации не будет
 
-  [[nodiscard]] double GetRemoveProb() const { return used_.size() > 1 ? kRemoveProb : 0; }
-  [[nodiscard]] double GetAddProb() const { return not_used_.empty() ? 0 : kAddProb; }
-  [[nodiscard]] double GetSwapSrcProb() const { return used_.size() > 1 ? kSwapSrcProb : 0; }
-  [[nodiscard]] double GetSwapDestProb() const { return used_.size() > 1 ? kSwapDestProb : 0; }
+  [[nodiscard]] double GetRemoveProb() const { return used_.size() > 1 ? remove_prob_ : 0; }
+  [[nodiscard]] double GetAddProb() const { return not_used_.empty() ? 0 : add_prob_; }
+  [[nodiscard]] double GetSwapSrcProb() const { return used_.size() > 1 ? swap_src_prob_ : 0; }
+  [[nodiscard]] double GetSwapDestProb() const { return used_.size() > 1 ? swap_dest_prob_ : 0; }
 
   void Remove(size_t id);
   static void Swap(std::map<size_t, size_t>& id_to_pos, std::map<size_t, size_t>& pos_to_id, size_t pos1, size_t pos2);
@@ -107,8 +115,12 @@ BatchT MutatorCM::GetBatch() {
   return {sources_ans, destinations_ans};
 }
 
-MutatorCM::MutatorCM(const std::vector<Order>& orders, const std::vector<size_t>& trace)
-    : orders_(orders), not_used_(trace.begin(), trace.end()) {}
+MutatorCM::MutatorCM(const std::vector<Order>& orders, const std::vector<size_t>& trace,
+                     long double remove_prob, long double add_prob,
+                     long double swap_src_prob, long double swap_dest_prob, long double cm_threshold)
+    : orders_(orders), not_used_(trace.begin(), trace.end()),
+      remove_prob_(remove_prob), add_prob_(add_prob),
+      swap_src_prob_(swap_src_prob), swap_dest_prob_(swap_dest_prob), cm_threshold_(cm_threshold) {}
 
 void MutatorCM::Remove(size_t id) {
   used_.erase(id);
@@ -173,7 +185,7 @@ MutatorCM::Mutation MutatorCM::operator()(long double temp) const {
     if (temp * 100000 >= 1) {
       size_t iter_count = 1;
       while (iter_count < kTryingAddCount and GetLength(orders_[new_claim].source, center_mass_) +
-          GetLength(orders_[new_claim].destination, center_mass_) > 2 * kCMThreshold) {
+          GetLength(orders_[new_claim].destination, center_mass_) > 2 * cm_threshold_) {
         ++iter_count;
         new_claim = GetRandomElement(not_used_, [](size_t a) { return a; });
       }

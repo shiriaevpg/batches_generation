@@ -43,7 +43,7 @@ av_percent /= len(old_len)
 av_unit_gain /= len(old_len)
 
 # Настройка размера фигуры для трех графиков
-fig = plt.figure(figsize=(15, 7))
+fig = plt.figure(figsize=(20, 7))
 fig.suptitle(f"{sys.argv[3]}, Время генерации батча: {benchmark} сек, средний процент экономии: {av_percent}, "
              f"удельная выгода {av_unit_gain} км/размер батча")
 max_size = max(size)

@@ -29,7 +29,9 @@ class Mutator {
     Mutation() = default;
   };
 
-  Mutator(const std::vector<Order>& orders, const std::vector<size_t>& trace);
+  Mutator(const std::vector<Order>& orders, const std::vector<size_t>& trace,
+          long double remove_prob = kRemoveProb, long double add_prob = kAddProb,
+          long double swap_src_prob = kSwapSrcProb, long double swap_dest_prob = kSwapDestProb);
   Mutator(const Mutator&) = default;
   Mutation operator()(long double temp) const;
   void Add(size_t id);
@@ -48,6 +50,11 @@ class Mutator {
   std::map<size_t, size_t> dest_pos_;  // аналогично
   std::map<size_t, size_t> dest_id_;
 
+  long double remove_prob_;
+  long double add_prob_;
+  long double swap_src_prob_;
+  long double swap_dest_prob_;
+
 //  Gainer gainer_;  // для стресс тестов
 
   //  TODO тут хз какие вероятности, можно сделать так, чтобы когда в батче мало заказов,
@@ -57,10 +64,10 @@ class Mutator {
   constexpr static double kSwapSrcProb = 0.4;
   constexpr static double kSwapDestProb = 0.4;
 
-  [[nodiscard]] double GetRemoveProb() const { return used_.size() > 1 ? kRemoveProb : 0; }
-  [[nodiscard]] double GetAddProb() const { return not_used_.empty() ? 0 : kAddProb; }
-  [[nodiscard]] double GetSwapSrcProb() const { return used_.size() > 1 ? kSwapSrcProb : 0; }
-  [[nodiscard]] double GetSwapDestProb() const { return used_.size() > 1 ? kSwapDestProb : 0; }
+  [[nodiscard]] double GetRemoveProb() const { return used_.size() > 1 ? remove_prob_ : 0; }
+  [[nodiscard]] double GetAddProb() const { return not_used_.empty() ? 0 : add_prob_; }
+  [[nodiscard]] double GetSwapSrcProb() const { return used_.size() > 1 ? swap_src_prob_ : 0; }
+  [[nodiscard]] double GetSwapDestProb() const { return used_.size() > 1 ? swap_dest_prob_ : 0; }
 
   void Remove(size_t id);
   static void Swap(std::map<size_t, size_t>& id_to_pos, std::map<size_t, size_t>& pos_to_id, size_t pos1, size_t pos2);
@@ -106,8 +113,12 @@ BatchT Mutator::GetBatch() {
   return {sources_ans, destinations_ans};
 }
 
-Mutator::Mutator(const std::vector<Order>& orders, const std::vector<size_t>& trace)
-    : orders_(orders), not_used_(trace.begin(), trace.end()) {}
+Mutator::Mutator(const std::vector<Order>& orders, const std::vector<size_t>& trace,
+                 long double remove_prob, long double add_prob,
+                 long double swap_src_prob, long double swap_dest_prob)
+    : orders_(orders), not_used_(trace.begin(), trace.end()),
+      remove_prob_(remove_prob), add_prob_(add_prob),
+      swap_src_prob_(swap_src_prob), swap_dest_prob_(swap_dest_prob) {}
 
 void Mutator::Remove(size_t id) {
   used_.erase(id);
